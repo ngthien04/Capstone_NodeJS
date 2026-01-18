@@ -1,0 +1,99 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model NguoiDung {
+  id         Int         @id @default(autoincrement())
+  name       String      @db.VarChar(255)
+  email      String      @unique @db.VarChar(255)
+  pass_word  String      @db.VarChar(255)
+  phone      String?     @db.VarChar(20)
+  birth_day  String?     @db.VarChar(50)
+  gender     String?     @db.VarChar(10)
+  role       String?     @db.VarChar(50)
+  avatar     String?     @db.VarChar(255)
+  
+  datPhong   DatPhong[]
+  binhLuan   BinhLuan[]
+
+  @@map("NguoiDung")
+}
+
+// Location model
+model ViTri {
+  id          Int      @id @default(autoincrement())
+  ten_vi_tri  String   @db.VarChar(255)
+  tinh_thanh  String   @db.VarChar(255)
+  quoc_gia    String   @db.VarChar(255)
+  hinh_anh    String?  @db.VarChar(255)
+  
+  phong       Phong[]
+
+  @@map("ViTri")
+}
+
+// Room model
+model Phong {
+  id         Int      @id @default(autoincrement())
+  ten_phong  String   @db.VarChar(255)
+  khach      Int
+  phong_ngu  Int
+  giuong     Int
+  phong_tam  Int
+  mo_ta      String?  @db.VarChar(500)
+  gia_tien   Int
+  may_giat   Boolean  @default(false)
+  ban_la     Boolean  @default(false)
+  tivi       Boolean  @default(false)
+  dieu_hoa   Boolean  @default(false)
+  wifi       Boolean  @default(false)
+  bep        Boolean  @default(false)
+  do_xe      Boolean  @default(false)
+  ho_boi     Boolean  @default(false)
+  ban_ui     Boolean  @default(false)
+  hinh_anh   String?  @db.VarChar(255)
+  ma_vi_tri  Int
+  
+  viTri      ViTri      @relation(fields: [ma_vi_tri], references: [id])
+  datPhong   DatPhong[]
+  binhLuan   BinhLuan[]
+
+  @@map("Phong")
+}
+
+// Booking model
+model DatPhong {
+  id              Int      @id @default(autoincrement())
+  ma_phong        Int
+  ngay_den        DateTime
+  ngay_di         DateTime
+  so_luong_khach  Int
+  ma_nguoi_dat    Int
+  
+  phong           Phong     @relation(fields: [ma_phong], references: [id])
+  nguoiDung       NguoiDung @relation(fields: [ma_nguoi_dat], references: [id])
+
+  @@map("DatPhong")
+}
+
+// Comment model
+model BinhLuan {
+  id                Int       @id @default(autoincrement())
+  ma_phong          Int
+  ma_nguoi_binh_luan Int
+  ngay_binh_luan    DateTime  @default(now())
+  noi_dung          String    @db.VarChar(500)
+  sao_binh_luan     Int
+  
+  phong             Phong     @relation(fields: [ma_phong], references: [id])
+  nguoiDung         NguoiDung @relation(fields: [ma_nguoi_binh_luan], references: [id])
+
+  @@map("BinhLuan")
+}
