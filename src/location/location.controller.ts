@@ -27,7 +27,7 @@ import { MulterFile } from '../common/interfaces/multer-file.interface';
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
 
-  @ApiOperation({ summary: 'Tạo vị trí mới (Admin only)' })
+  @ApiOperation({ summary: 'Tạo vị trí mới' })
   @ApiBearerAuth('JWT-auth')
   @ApiResponse({ status: 201, description: 'Tạo vị trí thành công' })
   @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
@@ -66,6 +66,12 @@ export class LocationController {
     return this.locationService.findOne(+id);
   }
 
+  @ApiOperation({ summary: 'Cập nhật vị trí' })
+  @ApiBearerAuth('JWT-auth')
+  @ApiParam({ name: 'id', type: Number, description: 'ID của vị trí', example: 1 })
+  @ApiResponse({ status: 200, description: 'Cập nhật vị trí thành công' })
+  @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
+  @ApiResponse({ status: 403, description: 'Không có quyền admin' })
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -73,6 +79,12 @@ export class LocationController {
     return this.locationService.update(+id, updateLocationDto);
   }
 
+  @ApiOperation({ summary: 'Xoá vị trí' })
+  @ApiBearerAuth('JWT-auth')
+  @ApiParam({ name: 'id', type: Number, description: 'ID của vị trí', example: 1 })
+  @ApiResponse({ status: 200, description: 'Xoá vị trí thành công' })
+  @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
+  @ApiResponse({ status: 403, description: 'Không có quyền admin' })
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -80,7 +92,7 @@ export class LocationController {
     return this.locationService.remove(+id);
   }
 
-  @ApiOperation({ summary: 'Upload ảnh cho vị trí (Admin only)' })
+  @ApiOperation({ summary: 'Upload ảnh cho vị trí' })
   @ApiBearerAuth('JWT-auth')
   @ApiConsumes('multipart/form-data')
   @ApiQuery({ name: 'locationId', type: Number, description: 'ID của vị trí', example: 1 })

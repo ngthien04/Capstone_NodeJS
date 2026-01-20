@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
@@ -134,6 +134,23 @@ export class BookingService {
       where: { id },
       data: updateBookingDto,
     });
+  }
+
+  // Chỉ owner hoặc admin được phép cập nhật booking
+  async updateWithOwnershipCheck(
+    id: number,
+    updateBookingDto: UpdateBookingDto,
+    currentUser: { userId: number; role: string },
+  ) {
+    const booking = await this.findOne(id);
+    if (
+      currentUser.role !== 'admin' &&
+      booking.nguoiDung &&
+      booking.nguoiDung.id !== currentUser.userId
+    ) {
+      throw new ForbiddenException('Bạn chỉ có thể cập nhật booking của chính mình');
+    }
+    return this.update(id, updateBookingDto);
   }
 
   async remove(id: number) {

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
@@ -115,12 +115,50 @@ export class CommentService {
     });
   }
 
+  async findByUser(userId: number) {
+    return this.prisma.binhLuan.findMany({
+      where: { ma_nguoi_binh_luan: userId },
+      include: {
+        phong: {
+          include: {
+            viTri: true,
+          },
+        },
+        nguoiDung: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+  }
+
   async update(id: number, updateCommentDto: UpdateCommentDto) {
     await this.findOne(id);
     return this.prisma.binhLuan.update({
       where: { id },
       data: updateCommentDto,
     });
+  }
+
+  // Chỉ owner hoặc admin được phép cập nhật comment
+  async updateWithOwnershipCheck(
+    id: number,
+    updateCommentDto: UpdateCommentDto,
+    currentUser: { userId: number; role: string },
+  ) {
+    const comment = await this.findOne(id);
+    if (
+      currentUser.role !== 'admin' &&
+      comment.nguoiDung &&
+      comment.nguoiDung.id !== currentUser.userId
+    ) {
+      throw new ForbiddenException('Bạn chỉ có thể cập nhật bình luận của chính mình');
+    }
+    return this.update(id, updateCommentDto);
   }
 
   async remove(id: number) {

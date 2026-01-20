@@ -10,6 +10,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth, ApiResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { UsersService } from './users.service';
@@ -33,6 +34,8 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @ApiOperation({ summary: 'Tạo user' })
+  @ApiBearerAuth('JWT-auth')
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -40,6 +43,9 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  @ApiOperation({ summary: 'Xóa user' })
+  @ApiBearerAuth('JWT-auth')
+  @ApiParam({ name: 'id', type: Number, description: 'ID user cần xóa' })
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -58,8 +64,14 @@ export class UsersController {
 
   @Put(':id')
   @UseGuards(JwtAuthGuard)
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @ApiBearerAuth('JWT-auth')
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Request() req) {
+    const currentUser = req.user;
+    const targetId = +id;
+    if (currentUser.role !== 'admin' && currentUser.userId !== targetId) {
+      throw new ForbiddenException('Bạn chỉ có thể cập nhật tài khoản của chính mình');
+    }
+    return this.usersService.update(targetId, updateUserDto);
   }
 
   @Get('search/:TenNguoiDung')
